@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-end mb-3">
+    <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimir Factura / Guardar PDF</button>
+</div>
+
+<div class="card shadow p-4 bg-white" id="factura">
+    <div class="row border-bottom pb-3 mb-3">
+        <div class="col-6">
+            <h3>FABRICA DE ARMARIOS S.A.</h3>
+            <p class="mb-0">Vendido por: <strong>{{ venta.vendedor.nombre_local }}</strong></p>
+            <p class="mb-0">Vendedor: {{ venta.vendedor.username }}</p>
+        </div>
+        <div class="col-6 text-end">
+            <h4 class="text-primary">FACTURA DE VENTA</h4>
+            <h5>{{ venta.numero_factura }}</h5>
+            <p>Fecha: {{ venta.fecha.strftime('%d/%m/%Y %H:%M') }}</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5>Cliente:</h5>
+            <p class="mb-1"><strong>Nombre:</strong> {{ venta.cliente_nombre }}</p>
+            <p class="mb-1"><strong>Documento:</strong> {{ venta.cliente_documento }}</p>
+            <p class="mb-1"><strong>Teléfono:</strong> {{ venta.cliente_telefono }}</p>
+            <p class="mb-1"><strong>Dirección:</strong> {{ venta.cliente_direccion }}</p>
+        </div>
+    </div>
+
+    <table class="table table-bordered mb-4">
+        <thead class="table-light">
+            <tr>
+                <th>Producto / Armario</th>
+                <th class="text-center">Cantidad</th>
+                <th class="text-end">Precio Unitario</th>
+                <th class="text-end">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ venta.mueble.nombre }}</td>
+                <td class="text-center">{{ venta.cantidad }}</td>
+                <td class="text-end">${{ "{:,.2f}".format(venta.precio_unitario) }}</td>
+                <td class="text-end">${{ "{:,.2f}".format(venta.total) }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-6 ms-auto text-end">
+            <h4>Total Pagado: ${{ "{:,.2f}".format(venta.total) }}</h4>
+        </div>
+    </div>
+</div>
+{% endblock %}

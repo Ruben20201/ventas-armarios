@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Historial de Ventas</h2>
+<div class="card shadow mt-4">
+    <div class="card-body">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>N° Factura</th>
+                    <th>Fecha</th>
+                    <th>Local / Vendedor</th>
+                    <th>Cliente</th>
+                    <th>Armario</th>
+                    <th>Cantidad</th>
+                    <th>Total</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for venta in ventas %}
+                <tr>
+                    <td>{{ venta.numero_factura }}</td>
+                    <td>{{ venta.fecha.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ venta.vendedor.nombre_local }}</td>
+                    <td>{{ venta.cliente_nombre }}</td>
+                    <td>{{ venta.mueble.nombre }}</td>
+                    <td>{{ venta.cantidad }}</td>
+                    <td>${{ "{:,.2f}".format(venta.total) }}</td>
+                    <td><a href="{{ url_for('ver_factura', venta_id=venta.id) }}" class="btn btn-sm btn-info text-white">Ver Factura</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

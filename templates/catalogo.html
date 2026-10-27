@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4">Catálogo de Armarios Disponibles</h2>
+<div class="row">
+    {% for mueble in muebles %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <img src="{{ url_for('static', filename='uploads/' + mueble.imagen) }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ mueble.nombre }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ mueble.nombre }}</h5>
+                <p class="card-text text-muted">{{ mueble.descripcion }}</p>
+                <h6 class="text-primary fw-bold">${{ "{:,.2f}".format(mueble.precio) }}</h6>
+                <p class="card-text">
+                    <span class="badge {% if mueble.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                        Stock: {{ mueble.stock }} unidades
+                    </span>
+                </p>
+            </div>
+            <div class="card-footer bg-white border-0 text-center">
+                {% if mueble.stock > 0 %}
+                    <a href="{{ url_for('nueva_venta', mueble_id=mueble.id) }}" class="btn btn-success w-100">Registrar Venta / Facturar</a>
+                {% else %}
+                    <button class="btn btn-secondary w-100" disabled>Sin Stock</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

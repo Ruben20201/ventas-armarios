@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Gestión de Armarios y Stock (Fábrica)</h2>
+
+<div class="row mt-4">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">Agregar Nuevo Armario</div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-2"><label>Nombre del Modelo</label><input type="text" name="nombre" class="form-control" required></div>
+                    <div class="mb-2"><label>Descripción</label><textarea name="descripcion" class="form-control" rows="2"></textarea></div>
+                    <div class="mb-2"><label>Precio ($)</label><input type="number" step="0.01" name="precio" class="form-control" required></div>
+                    <div class="mb-2"><label>Stock Inicial</label><input type="number" name="stock" class="form-control" required></div>
+                    <div class="mb-3"><label>Imagen</label><input type="file" name="imagen" class="form-control"></div>
+                    <button type="submit" class="btn btn-primary w-100">Guardar Mueble</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">Inventario Actual</div>
+            <div class="card-body">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Modelo</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Actualizar Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mueble in muebles %}
+                        <tr>
+                            <td>{{ mueble.nombre }}</td>
+                            <td>${{ mueble.precio }}</td>
+                            <td>{{ mueble.stock }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('actualizar_stock', id=mueble.id) }}" class="d-flex gap-2">
+                                    <input type="number" name="stock" value="{{ mueble.stock }}" class="form-control form-control-sm" style="width: 80px;">
+                                    <button type="submit" class="btn btn-sm btn-warning">Actualizar</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4>Generar Venta: {{ mueble.nombre }}</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>Precio Unitario:</strong> ${{ "{:,.2f}".format(mueble.precio) }}</p>
+                <p><strong>Stock Disponible:</strong> {{ mueble.stock }} unidades</p>
+                <hr>
+                <form method="POST">
+                    <h5>Datos de la Venta</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Cantidad a Comprar</label>
+                        <input type="number" name="cantidad" value="1" min="1" max="{{ mueble.stock }}" class="form-control" required>
+                    </div>
+
+                    <h5 class="mt-4">Datos del Cliente (para Factura)</h5>
+                    <div class="mb-2"><label>Nombre Completo</label><input type="text" name="cliente_nombre" class="form-control" required></div>
+                    <div class="mb-2"><label>Documento / Cédula / NIT</label><input type="text" name="cliente_documento" class="form-control" required></div>
+                    <div class="mb-2"><label>Teléfono</label><input type="text" name="cliente_telefono" class="form-control"></div>
+                    <div class="mb-3"><label>Dirección de Entrega</label><input type="text" name="cliente_direccion" class="form-control"></div>
+
+                    <button type="submit" class="btn btn-success w-100">Confirmar Venta y Emitir Factura</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

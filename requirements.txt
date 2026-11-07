@@ -4,4 +4,5 @@ Flask-Login
 Werkzeug
 cloudinary
 gunicorn
+psycopg
 psycopg2-binary

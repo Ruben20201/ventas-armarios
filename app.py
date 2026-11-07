@@ -9,11 +9,11 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
-# 1. Inicialización de la App Flask única
+# 1. Inicialización de la App Flask
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave_secreta_super_segura')
 
-# Configuración de base de datos (Render Postgres o SQLite local)
+# Configuración de base de datos (Render PostgreSQL o SQLite local)
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///armarios.db')
 if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
@@ -21,24 +21,25 @@ if db_url and db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Configuración de subida de imágenes
+# Configuración de subida de imágenes locales (respaldo)
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 db = SQLAlchemy(app)
 
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'  # type: ignore
-
-# Configuración de Cloudinary con tus datos reales
+# Configuración de Cloudinary
 cloudinary.config(
     cloud_name = 'ljsxuy3b',
     api_key = '572777632729745',
     api_secret = 'HW8Wklq-2FgJrZsqsNlQPhIw5vk'
 )
 
-# --- MODELOS DE LA BASE DE DATOS ---
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'  # type: ignore
+
+
+# --- 2. MODELOS DE LA BASE DE DATOS ---
 
 class Usuario(UserMixin, db.Model):
     __tablename__ = 'usuarios'
@@ -88,7 +89,34 @@ class Venta(db.Model):
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
 
-# --- RUTAS DE AUTENTICACIÓN ---
+
+# --- 3. CREACIÓN DE TABLAS Y USUARIOS GLOBAL (Para Render y Local) ---
+with app.app_context():
+    db.create_all()
+    
+    # Creación de usuarios por defecto si no existen
+    if not Usuario.query.filter_by(username='fabrica').first():
+        fabrica = Usuario(username='fabrica', rol='fabrica', nombre_local='Fábrica Central Armarios')  # type: ignore
+        fabrica.set_password('admin123')
+        db.session.add(fabrica)
+
+    if not Usuario.query.filter_by(username='vendedor1').first():
+        vendedor = Usuario(username='vendedor1', rol='vendedor', nombre_local='Local Centro')  # type: ignore
+        vendedor.set_password('vendedor123')
+        db.session.add(vendedor)
+        
+    db.session.commit()
+
+
+# --- 4. LISTA DE IMÁGENES PRESELECCIONADAS ---
+IMAGENES_PRESELECCIONADAS = [
+    {"nombre": "Armario Clásico Marrón", "url": "https://res.cloudinary.com/ljsxuy3b/image/upload/v1/armarios_inventario/armario1.jpg"},
+    {"nombre": "Armario Moderno Blanco", "url": "https://res.cloudinary.com/ljsxuy3b/image/upload/v1/armarios_inventario/armario2.jpg"},
+    {"nombre": "Armario Juvenil con Espejo", "url": "https://res.cloudinary.com/ljsxuy3b/image/upload/v1/armarios_inventario/armario3.jpg"}
+]
+
+
+# --- 5. RUTAS DE AUTENTICACIÓN Y DEL SISTEMA ---
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -111,19 +139,11 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-# --- RUTAS DEL SISTEMA ---
-
 @app.route('/')
 @login_required
 def catalogo():
     muebles = Mueble.query.all()
     return render_template('catalogo.html', muebles=muebles)
-
-IMAGENES_PRESELECCIONADAS = [
-    {"nombre": "Armario Clásico Marrón", "url": "https://res.cloudinary.com/ljsxuy3b/image/upload/v1/armarios_inventario/armario1.jpg"},
-    {"nombre": "Armario Moderno Blanco", "url": "https://res.cloudinary.com/ljsxuy3b/image/upload/v1/armarios_inventario/armario2.jpg"},
-    {"nombre": "Armario Juvenil con Espejo", "url": "https://res.cloudinary.com/ljsxuy3b/image/upload/v1/armarios_inventario/armario3.jpg"}
-]
 
 @app.route('/mueble/<int:id>/eliminar', methods=['POST'])
 @login_required
@@ -154,9 +174,7 @@ def gestionar_muebles():
         ubicacion_form = request.form.get('ubicacion', 'Fábrica')
 
         imagen_elegida = request.form.get('imagen_catalogo')
-        file = request.files.get('imagen_archivo') # <-- Debe coincidir con name="imagen_archivo" de tu HTML
-
-        filename = 'default.jpg'
+        file = request.files.get('imagen_archivo')
 
         filename = 'default.jpg'
 
@@ -181,11 +199,12 @@ def gestionar_muebles():
 
     muebles = Mueble.query.all()
     return render_template('gestionar_muebles.html', muebles=muebles, imagenes_stock=IMAGENES_PRESELECCIONADAS)
+
 @app.route('/mueble/<int:id>/cambiar-ubicacion', methods=['POST'])
 @login_required
 def cambiar_ubicacion(id):
     if current_user.rol != 'fabrica':
-        flash('Acceso denegado: Solo el administrador puede cambiar la ubicación de los muebles.', 'danger')
+        flash('Acceso denegado: Solo el administrador puede cambiar la ubicación.', 'danger')
         return redirect(url_for('catalogo'))
 
     mueble = Mueble.query.get_or_404(id)
@@ -268,42 +287,7 @@ def historial_ventas():
         ventas = Venta.query.filter_by(vendedor_id=current_user.id).order_by(Venta.fecha.desc()).all()
     return render_template('historial_ventas.html', ventas=ventas)
 
-# Bloque final de ejecución y creación de usuarios por defecto
+
+# --- 6. BLOQUE LOCAL ABSOLUTO (Solo para ejecutar en tu PC) ---
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        
-        if not Usuario.query.filter_by(username='fabrica').first():
-            fabrica = Usuario(username='fabrica', rol='fabrica', nombre_local='Fábrica Central Armarios') # type: ignore
-            fabrica.set_password('admin123')
-            db.session.add(fabrica)
-
-        if not Usuario.query.filter_by(username='vendedor1').first():
-            vendedor = Usuario(username='vendedor1', rol='vendedor', nombre_local='Local Centro') # type: ignore
-            vendedor.set_password('vendedor123')
-            db.session.add(vendedor)
-            
-        db.session.commit()
-
-
-
-# --- AQUÍ VA AL FINAL ABSOLUTO DE APP.PY ---
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        
-        # Creación de usuarios por defecto si no existen
-        if not Usuario.query.filter_by(username='fabrica').first():
-            fabrica = Usuario(username='fabrica', rol='fabrica', nombre_local='Fábrica Central Armarios') # type: ignore
-            fabrica.set_password('admin123')
-            db.session.add(fabrica)
-
-        if not Usuario.query.filter_by(username='vendedor1').first():
-            vendedor = Usuario(username='vendedor1', rol='vendedor', nombre_local='Local Centro') # type: ignore
-            vendedor.set_password('vendedor123')
-            db.session.add(vendedor)
-            
-        db.session.commit()
-        
-   
     app.run(debug=True)

@@ -1,21 +1,36 @@
 {% extends "base.html" %}
 {% block content %}
 <h2 class="mb-4">Catálogo de Armarios Disponibles</h2>
+
 <div class="row">
     {% for mueble in muebles %}
     <div class="col-md-4 mb-4">
         <div class="card h-100 shadow-sm">
-            <img src="{{ url_for('static', filename='uploads/' + mueble.imagen) }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ mueble.nombre }}">
+            <img src="{% if mueble.imagen and 'http' in mueble.imagen %}{{ mueble.imagen }}{% else %}{{ url_for('static', filename='uploads/' ~ (mueble.imagen if mueble.imagen else 'default.jpg')) }}{% endif %}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ mueble.nombre }}">
             <div class="card-body">
-                <h5 class="card-title">{{ mueble.nombre }}</h5>
-                <p class="card-text text-muted">{{ mueble.descripcion }}</p>
-                <h6 class="text-primary fw-bold">${{ "{:,.2f}".format(mueble.precio) }}</h6>
+               <h5 class="card-title">{{ mueble.nombre }}</h5>
+               <p class="card-text text-muted">{{ mueble.descripcion }}</p>
+               <h6 class="text-primary fw-bold">${{ "{:,.2f}".format(mueble.precio) }}</h6>
+    
                 <p class="card-text">
-                    <span class="badge {% if mueble.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
-                        Stock: {{ mueble.stock }} unidades
-                    </span>
-                </p>
-            </div>
+                <!-- Stock -->
+             <span class="badge {% if mueble.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                    Stock: {{ mueble.stock }} unidades
+             </span>
+ 
+        <!-- NUEVO: Etiqueta de Ubicación -->
+        {% if mueble.ubicacion == 'Local' %}
+            <span class="badge bg-info text-dark">Local</span>
+        {% else %}
+            <span class="badge bg-secondary">Fábrica</span>
+        {% endif %}
+            <form action="{{ url_for('cambiar_ubicacion', id=mueble.id) }}" method="POST" style="display:inline;">
+                 <button type="submit" class="btn btn-sm {% if mueble.ubicacion == 'Local' %}btn-info text-dark{% else %}btn-secondary{% endif %}" title="Haz clic para cambiar ubicación">
+                    📍 {{ mueble.ubicacion }} (Cambiar)
+                </button>
+            </form>
+    </p>
+             </div>
             <div class="card-footer bg-white border-0 text-center">
                 {% if mueble.stock > 0 %}
                     <a href="{{ url_for('nueva_venta', mueble_id=mueble.id) }}" class="btn btn-success w-100">Registrar Venta / Facturar</a>

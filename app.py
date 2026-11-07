@@ -5,7 +5,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
+# 1. Inicialización de la App Flask única
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave_secreta_super_segura')
 
@@ -23,8 +27,16 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 db = SQLAlchemy(app)
+
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'  # type: ignore
+
+# Configuración de Cloudinary con tus datos reales
+cloudinary.config(
+    cloud_name = 'ljsxuy3b',
+    api_key = '572777632729745',
+    api_secret = 'HW8Wklq-2FgJrZsqsNlQPhIw5vk'
+)
 
 # --- MODELOS DE LA BASE DE DATOS ---
 
@@ -43,30 +55,30 @@ class Usuario(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 class Mueble(db.Model):
-    __tablename__ = 'muebles'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     descripcion = db.Column(db.Text, nullable=True)
     precio = db.Column(db.Float, nullable=False)
-    stock = db.Column(db.Integer, nullable=False, default=0)
-    imagen = db.Column(db.String(255), nullable=True, default='default.jpg')
+    stock = db.Column(db.Integer, default=0)
+    imagen = db.Column(db.String(255), nullable=True)
+    ubicacion = db.Column(db.String(50), default='Fábrica')
 
 class Venta(db.Model):
     __tablename__ = 'ventas'
     id = db.Column(db.Integer, primary_key=True)
     numero_factura = db.Column(db.String(20), unique=True, nullable=False)
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
+    
     vendedor_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     vendedor = db.relationship('Usuario', backref='ventas')
     
-    mueble_id = db.Column(db.Integer, db.ForeignKey('muebles.id'), nullable=False)
-    mueble = db.relationship('Mueble', backref='ventas')
+    mueble_id = db.Column(db.Integer, db.ForeignKey('mueble.id'), nullable=False)
+    mueble = db.relationship('Mueble', backref=db.backref('ventas_asociadas', cascade='all, delete-orphan', lazy=True))
     
     cantidad = db.Column(db.Integer, nullable=False)
     precio_unitario = db.Column(db.Float, nullable=False)
     total = db.Column(db.Float, nullable=False)
     
-    # Datos del cliente para la factura
     cliente_nombre = db.Column(db.String(100), nullable=False)
     cliente_documento = db.Column(db.String(50), nullable=False)
     cliente_telefono = db.Column(db.String(50), nullable=True)
@@ -107,11 +119,31 @@ def catalogo():
     muebles = Mueble.query.all()
     return render_template('catalogo.html', muebles=muebles)
 
+IMAGENES_PRESELECCIONADAS = [
+    {"nombre": "Armario Clásico Marrón", "url": "https://res.cloudinary.com/ljsxuy3b/image/upload/v1/armarios_inventario/armario1.jpg"},
+    {"nombre": "Armario Moderno Blanco", "url": "https://res.cloudinary.com/ljsxuy3b/image/upload/v1/armarios_inventario/armario2.jpg"},
+    {"nombre": "Armario Juvenil con Espejo", "url": "https://res.cloudinary.com/ljsxuy3b/image/upload/v1/armarios_inventario/armario3.jpg"}
+]
+
+@app.route('/mueble/<int:id>/eliminar', methods=['POST'])
+@login_required
+def eliminar_mueble(id):
+    if current_user.rol != 'fabrica':
+        flash('Acceso denegado: Solo el administrador puede eliminar muebles.', 'danger')
+        return redirect(url_for('catalogo'))
+
+    mueble = Mueble.query.get_or_404(id)
+    db.session.delete(mueble)
+    db.session.commit()
+    
+    flash(f'El mueble "{mueble.nombre}" ha sido eliminado correctamente.', 'success')
+    return redirect(url_for('gestionar_muebles'))
+
 @app.route('/muebles/gestionar', methods=['GET', 'POST'])
 @login_required
 def gestionar_muebles():
     if current_user.rol != 'fabrica':
-        flash('Acceso denegado: Solo el personal de la fábrica puede gestionar el catálogo.', 'danger')
+        flash('Acceso denegado.', 'danger')
         return redirect(url_for('catalogo'))
 
     if request.method == 'POST':
@@ -119,26 +151,52 @@ def gestionar_muebles():
         descripcion = request.form.get('descripcion')
         precio = float(request.form.get('precio') or 0)
         stock = int(request.form.get('stock') or 0)
-        file = request.files.get('imagen')
+        ubicacion_form = request.form.get('ubicacion', 'Fábrica')
+
+        imagen_elegida = request.form.get('imagen_catalogo')
+        file = request.files.get('imagen_archivo') # <-- Debe coincidir con name="imagen_archivo" de tu HTML
+
         filename = 'default.jpg'
+
+        filename = 'default.jpg'
+
         if file and file.filename != '':
-            filename = secure_filename(file.filename or '')
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            upload_result = cloudinary.uploader.upload(file, folder="armarios_inventario")
+            filename = upload_result.get('secure_url')
+        elif imagen_elegida:
+            filename = imagen_elegida
 
         nuevo_mueble = Mueble(
             nombre=nombre,  # type: ignore
-         descripcion=descripcion,  # type: ignore
-         precio=precio,  # type: ignore
-        stock=stock,  # type: ignore
-        imagen=filename  # type: ignore
-         )
+            descripcion=descripcion,  # type: ignore
+            precio=precio,  # type: ignore
+            stock=stock,  # type: ignore
+            imagen=filename,  # type: ignore
+            ubicacion=ubicacion_form,  # type: ignore
+        )
         db.session.add(nuevo_mueble)
         db.session.commit()
-        flash('Mueble agregado al catálogo exitosamente.', 'success')
+        flash('Mueble agregado con éxito.', 'success')
         return redirect(url_for('gestionar_muebles'))
 
     muebles = Mueble.query.all()
-    return render_template('gestionar_muebles.html', muebles=muebles)
+    return render_template('gestionar_muebles.html', muebles=muebles, imagenes_stock=IMAGENES_PRESELECCIONADAS)
+@app.route('/mueble/<int:id>/cambiar-ubicacion', methods=['POST'])
+@login_required
+def cambiar_ubicacion(id):
+    if current_user.rol != 'fabrica':
+        flash('Acceso denegado: Solo el administrador puede cambiar la ubicación de los muebles.', 'danger')
+        return redirect(url_for('catalogo'))
+
+    mueble = Mueble.query.get_or_404(id)
+    if mueble.ubicacion == 'Fábrica':
+        mueble.ubicacion = 'Local'
+    else:
+        mueble.ubicacion = 'Fábrica'
+
+    db.session.commit()
+    flash(f'La ubicación de {mueble.nombre} ha sido actualizada con éxito.', 'success')
+    return redirect(url_for('catalogo'))
 
 @app.route('/muebles/actualizar_stock/<int:id>', methods=['POST'])
 @login_required
@@ -166,10 +224,8 @@ def nueva_venta(mueble_id):
             flash(f'No hay suficiente stock. Disponible: {mueble.stock}', 'danger')
             return redirect(url_for('nueva_venta', mueble_id=mueble.id))
 
-        # Descontar stock
         mueble.stock -= cantidad
 
-        # Crear número de factura único (Ej: FAC-20261027-001)
         total_ventas = Venta.query.count() + 1
         num_factura = f"FAC-{datetime.now().strftime('%Y%m%d')}-{total_ventas:03d}"
 
@@ -177,17 +233,17 @@ def nueva_venta(mueble_id):
         total = cantidad * precio_unitario
 
         venta = Venta(
-    numero_factura=num_factura,  # type: ignore
-    vendedor_id=current_user.id,  # type: ignore
-    mueble_id=mueble.id,  # type: ignore
-    cantidad=cantidad,  # type: ignore
-    precio_unitario=precio_unitario,  # type: ignore
-    total=total,  # type: ignore
-    cliente_nombre=request.form.get('cliente_nombre'),  # type: ignore
-    cliente_documento=request.form.get('cliente_documento'),  # type: ignore
-    cliente_telefono=request.form.get('cliente_telefono'),  # type: ignore
-    cliente_direccion=request.form.get('cliente_direccion')  # type: ignore
-)
+            numero_factura=num_factura,  # type: ignore
+            vendedor_id=current_user.id,  # type: ignore
+            mueble_id=mueble.id,  # type: ignore
+            cantidad=cantidad,  # type: ignore
+            precio_unitario=precio_unitario,  # type: ignore
+            total=total,  # type: ignore
+            cliente_nombre=request.form.get('cliente_nombre'),  # type: ignore
+            cliente_documento=request.form.get('cliente_documento'),  # type: ignore
+            cliente_telefono=request.form.get('cliente_telefono'),  # type: ignore
+            cliente_direccion=request.form.get('cliente_direccion')  # type: ignore
+        )
 
         db.session.add(venta)
         db.session.commit()
@@ -212,24 +268,42 @@ def historial_ventas():
         ventas = Venta.query.filter_by(vendedor_id=current_user.id).order_by(Venta.fecha.desc()).all()
     return render_template('historial_ventas.html', ventas=ventas)
 
-# Inicialización de la base de datos y usuarios por defecto
-# Inicialización de la base de datos y usuarios por defecto
-with app.app_context():
-    db.create_all()
-    
-    # Crear usuario de Fábrica si no existe
-    if not Usuario.query.filter_by(username='fabrica').first():
-        fabrica = Usuario(username='fabrica', rol='fabrica', nombre_local='Fábrica Central Armarios') # type: ignore
-        fabrica.set_password('admin123')
-        db.session.add(fabrica)
-
-    # Crear usuario de Vendedor si no existe
-    if not Usuario.query.filter_by(username='vendedor1').first():
-        vendedor = Usuario(username='vendedor1', rol='vendedor', nombre_local='Local Centro') # type: ignore
-        vendedor.set_password('vendedor123')
-        db.session.add(vendedor)
-        
-    db.session.commit()
-
+# Bloque final de ejecución y creación de usuarios por defecto
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+        
+        if not Usuario.query.filter_by(username='fabrica').first():
+            fabrica = Usuario(username='fabrica', rol='fabrica', nombre_local='Fábrica Central Armarios') # type: ignore
+            fabrica.set_password('admin123')
+            db.session.add(fabrica)
+
+        if not Usuario.query.filter_by(username='vendedor1').first():
+            vendedor = Usuario(username='vendedor1', rol='vendedor', nombre_local='Local Centro') # type: ignore
+            vendedor.set_password('vendedor123')
+            db.session.add(vendedor)
+            
+        db.session.commit()
+
+
+
+# --- AQUÍ VA AL FINAL ABSOLUTO DE APP.PY ---
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+        
+        # Creación de usuarios por defecto si no existen
+        if not Usuario.query.filter_by(username='fabrica').first():
+            fabrica = Usuario(username='fabrica', rol='fabrica', nombre_local='Fábrica Central Armarios') # type: ignore
+            fabrica.set_password('admin123')
+            db.session.add(fabrica)
+
+        if not Usuario.query.filter_by(username='vendedor1').first():
+            vendedor = Usuario(username='vendedor1', rol='vendedor', nombre_local='Local Centro') # type: ignore
+            vendedor.set_password('vendedor123')
+            db.session.add(vendedor)
+            
+        db.session.commit()
+        
+   
     app.run(debug=True)

@@ -40,16 +40,37 @@ HTML
                         </select>
                     </div>
 
-                    <!-- Selector de Imágenes Precargadas de Cloudinary -->
-                     <div class="mb-3">
-                          <label for="imagen_catalogo" class="form-label">Seleccionar imagen de Cloudinary:</label>
-                          <select name="imagen_catalogo" class="form-select">
-                               <option value="">-- Elige una imagen precargada --</option>
-                               {% for img in imagenes_stock %}
-                               <option value="{{ img.url }}">{{ img.nombre }}</option>
-                               {% endfor %}
-                          </select>
+                    <!-- Selector de Imágenes Precargadas de Cloudinary con Miniatura -->
+                    <div class="mb-3">
+                         <label for="imagen_catalogo" class="form-label">Seleccionar imagen de Cloudinary:</label>
+                         <select name="imagen_catalogo" id="imagen_catalogo" class="form-select" onchange="mostrarMiniatura(this)">
+                            <option value="">-- Elige una imagen precargada --</option>
+                            {% for img in imagenes_stock %}
+                            <option value="{{ img.url }}">{{ img.nombre }}</option>
+                            {% endfor %}
+                       </select>
+    
+                        <!-- Contenedor donde aparecerá la miniatura en tiempo real -->
+                      <div class="mt-2 text-center">
+                           <img id="preview_imagen" src="" alt="Vista previa" class="img-thumbnail d-none" style="max-height: 120px;">
                      </div>
+                      </div>
+
+                     <!-- Script pequeño para mostrar la miniatura al cambiar la opción -->
+                    <script>
+                       function mostrarMiniatura(select) {
+                       var urlImagen = select.value;
+                       var preview = document.getElementById('preview_imagen');
+                     if (urlImagen) {
+                           preview.src = urlImagen;
+                           preview.classList.remove('d-none'); // Muestra la imagen
+                              } 
+                   else {
+                          preview.src = '';
+                          preview.classList.add('d-none'); // Oculta la imagen si no hay selección
+                         }
+}
+</script>
                     
                     <button type="submit" class="btn btn-primary w-100">Guardar Mueble</button>
 

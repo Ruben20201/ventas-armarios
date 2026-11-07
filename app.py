@@ -108,7 +108,7 @@ with app.app_context():
     db.session.commit()
 
 
-# --- 4. LISTA DE IMÁGENES PRESELECCIONADAS ---
+# --- 4. LISTA DE IMÁGENES PRESELECCIONADAS DE CLOUDINARY ---
 IMAGENES_PRESELECCIONADAS = [
     {"nombre": "Armario Clásico Marrón", "url": "https://res.cloudinary.com/ljsxuy3b/image/upload/v1/armarios_inventario/armario1.jpg"},
     {"nombre": "Armario Moderno Blanco", "url": "https://res.cloudinary.com/ljsxuy3b/image/upload/v1/armarios_inventario/armario2.jpg"},

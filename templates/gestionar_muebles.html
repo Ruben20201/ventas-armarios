@@ -1,3 +1,4 @@
+HTML
 {% extends "base.html" %}
 {% block content %}
 <h2>Gestión de Armarios y Stock (Fábrica)</h2>
@@ -8,7 +9,6 @@
         <div class="card shadow">
             <div class="card-header bg-dark text-white">Agregar Nuevo Armario</div>
             <div class="card-body">
-                <!-- El formulario abarca todos los campos incluyendo la ubicación -->
               <form action="{{ url_for('gestionar_muebles') }}" method="POST" enctype="multipart/form-data">
                     
                     <div class="mb-2">
@@ -31,7 +31,7 @@
                         <input type="number" name="stock" class="form-control" required>
                     </div>
 
-                    <!-- Selector de Ubicación (AHORA SÍ ESTÁ DENTRO DEL FORMULARIO) -->
+                    <!-- Selector de Ubicación -->
                     <div class="mb-2">
                         <label for="ubicacion" class="form-label">Ubicación Inicial</label>
                         <select class="form-control" id="ubicacion" name="ubicacion" required>
@@ -40,10 +40,16 @@
                         </select>
                     </div>
 
-                         <div class="mb-3">
-                        <label class="form-label">Imagen</label>
-                         <input type="file" name="imagen_archivo" class="form-control" accept="image/*">
-                    </div>
+                    <!-- Selector de Imágenes Precargadas de Cloudinary -->
+                     <div class="mb-3">
+                          <label for="imagen_catalogo" class="form-label">Seleccionar imagen de Cloudinary:</label>
+                          <select name="imagen_catalogo" class="form-select">
+                               <option value="">-- Elige una imagen precargada --</option>
+                               {% for img in imagenes_stock %}
+                               <option value="{{ img.url }}">{{ img.nombre }}</option>
+                               {% endfor %}
+                          </select>
+                     </div>
                     
                     <button type="submit" class="btn btn-primary w-100">Guardar Mueble</button>
 
@@ -64,7 +70,7 @@
                          <th>Precio</th>
                          <th>Stock</th>
                          <th>Actualizar Stock</th>
-                         <th>Acciones</th> <!-- ¡Agrega esta línea aquí en el thead! -->
+                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -80,7 +86,6 @@
                       </form>
                      </td>
                      <td>
-                          <!-- Botón para eliminar con confirmación -->
                           <form action="{{ url_for('eliminar_mueble', id=mueble.id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este mueble?');" style="display:inline;">
                             <button type="submit" class="btn btn-sm btn-danger">🗑️ Eliminar</button>
                           </form>

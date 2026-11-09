@@ -14,11 +14,10 @@
               alt="Icono"  style="width: 24px; height: 24px; object-fit: contain;"> Fabrica De Muebles CR</a>
             {% if current_user.is_authenticated %}
             <div class="navbar-nav me-auto">
-                <a class="nav-link text-black d-flex align-items-center gap-2" href="/catalogo">
-                <!-- Imagen traída por URL -->
-             <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794259567/automatizacion-de-la-casa.png" 
-              alt="Icono"  style="width: 24px; height: 24px; object-fit: contain;">
-              Catálogos </a>       
+                <a class="nav-link text-black d-flex align-items-center gap-2" href="{{ url_for('catalogo') }}">
+            <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794259567/automatizacion-de-la-casa.png" alt="Icono" style="width: 24px; height: 24px; object-fit: contain;">
+            Catálogo
+        </a>    
              
                      
                 {% if current_user.rol == 'fabrica' %}

@@ -3,23 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Armarios B2B</title>
+    <title>Fabrica De Muebles CR</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('catalogo') }}">🚪 Armarios B2B</a>
+<body style="background-color: rgb(205, 205, 207);">
+    <nav class="navbar navbar-expand-lg navbar-white bg-white mb-4">
+        <div class="container" >
+            <a class="navbar-brand" href="{{ url_for('catalogo') }}"> <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794261461/armario.png" 
+              alt="Icono"  style="width: 24px; height: 24px; object-fit: contain;"> Fabrica De Muebles CR</a>
             {% if current_user.is_authenticated %}
             <div class="navbar-nav me-auto">
-                <a class="nav-link" href="{{ url_for('catalogo') }}">Catálogo & Stock</a>
+                <a class="nav-link text-black d-flex align-items-center gap-2" href="/catalogo">
+                <!-- Imagen traída por URL -->
+             <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794259567/automatizacion-de-la-casa.png" 
+              alt="Icono"  style="width: 24px; height: 24px; object-fit: contain;">
+              Catálogos </a>       
+             
+                     
                 {% if current_user.rol == 'fabrica' %}
-                <a class="nav-link" href="{{ url_for('gestionar_muebles') }}">Gestión Fábrica</a>
+                <a class="nav-link" href="{{ url_for('gestionar_muebles') }}">
+                <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794260163/las-compras-en-linea.png" 
+              alt="Icono"  style="width: 24px; height: 24px; object-fit: contain;">
+                    Gestión Fábrica</a>
                 {% endif %}
-                <a class="nav-link" href="{{ url_for('historial_ventas') }}">Historial Ventas</a>
+                <a class="nav-link" href="{{ url_for('historial_ventas') }}">
+                    <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794260337/carro-de-la-carretilla.png" 
+              alt="Icono"  style="width: 24px; height: 24px; object-fit: contain;">Historial Ventas</a>
             </div>
+            
             <div class="navbar-nav">
-                <span class="navbar-text me-3">👤 {{ current_user.username }} ({{ current_user.nombre_local }})</span>
+                <span class="navbar-text me-3"> 
+                    <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794260634/persona-de-libre-dedicacion.png" 
+              alt="Icono"  style="width: 24px; height: 24px; object-fit: contain;"> {{ current_user.username }} ({{ current_user.nombre_local }})</span>
                 <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">Cerrar Sesión</a>
             </div>
             {% endif %}

@@ -80,43 +80,47 @@ function mostrarMiniatura(select) {
     </div>
 
     <!-- Tabla de Inventario Actual y Actualización de Stock -->
-    <div class="col-md-8">
-        <div class="card shadow">
-            <div class="card-header bg-dark text-white">Inventario Actual</div>
-            <div class="card-body">
-               <table class="table align-middle">
-                 <thead>
-                     <tr>
-                         <th>Modelo</th>
-                         <th>Precio</th>
-                         <th>Stock</th>
-                         <th>Actualizar Stock</th>
-                         <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                   {% for mueble in muebles %}
-                   <tr>
-                     <td>{{ mueble.nombre }}</td>
-                     <td>${{ mueble.precio }}</td>
-                     <td>{{ mueble.stock }}</td>
-                     <td>
-                      <form method="POST" action="{{ url_for('actualizar_stock', id=mueble.id) }}" class="d-flex gap-2">
-                      <input type="number" name="stock" value="{{ mueble.stock }}" class="form-control form-control-sm" style="width: 80px;">
-                      <button type="submit" class="btn btn-sm btn-warning">Actualizar</button>
-                      </form>
-                     </td>
-                     <td>
-                          <form action="{{ url_for('eliminar_mueble', id=mueble.id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este mueble?');" style="display:inline;">
-                            <button type="submit" class="btn btn-sm btn-danger">🗑️ Eliminar</button>
-                          </form>
-                     </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-              </table>
-            </div>
+    <!-- Tabla de Inventario Actual y Actualización de Stock -->
+<div class="col-md-8">
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white">Inventario Actual</div>
+        <div class="card-body">
+            <!-- 1. AQUÍ AGREGAMOS EL CONTENEDOR RESPONSIVO -->
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Modelo</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Actualizar Stock</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mueble in muebles %}
+                        <tr>
+                            <td>{{ mueble.nombre }}</td>
+                            <td>${{ mueble.precio }}</td>
+                            <td>{{ mueble.stock }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('actualizar_stock', id=mueble.id) }}" class="d-flex gap-2">
+                                    <input type="number" name="stock" value="{{ mueble.stock }}" class="form-control form-control-sm" style="width: 80px;">
+                                    <button type="submit" class="btn btn-sm btn-warning">Actualizar</button>
+                                </form>
+                            </td>
+                            <td>
+                                <form action="{{ url_for('eliminar_mueble', id=mueble.id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este mueble?');" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger">🗑️ Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div> <!-- Fin de table-responsive -->
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

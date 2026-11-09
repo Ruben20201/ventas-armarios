@@ -8,38 +8,59 @@
   
 </head>
 <body style="background-color: rgb(205, 205, 207);">
-    <nav class="navbar navbar-expand-lg navbar-white bg-white mb-4">
-        <div class="container" >
-            <a class="navbar-brand" href="{{ url_for('catalogo') }}"> <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794261461/armario.png" 
-              alt="Icono"  style="width: 24px; height: 24px; object-fit: contain;"> Fabrica De Muebles CR</a>
+<nav class="navbar navbar-expand-lg navbar-light bg-white mb-4 shadow-sm">
+    <div class="container-fluid">
+        <!-- Logo y Nombre -->
+        <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('catalogo') }}">
+            <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794261461/armario.png" alt="Icono" style="width: 24px; height: 24px; object-fit: contain;"> 
+            <span>Fabrica CR</span>
+        </a>
+
+        <!-- Botón Hamburguesa para Celulares -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Elementos del Menú que se ocultan/muestran en móvil -->
+        <div class="collapse navbar-collapse" id="navbarNav">
             {% if current_user.is_authenticated %}
-            <div class="navbar-nav me-auto">
-                <a class="nav-link text-black d-flex align-items-center gap-2" href="{{ url_for('catalogo') }}">
-            <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794259567/automatizacion-de-la-casa.png" alt="Icono" style="width: 24px; height: 24px; object-fit: contain;">
-            Catálogo
-        </a>    
-             
-                     
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('catalogo') }}">
+                        <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794259567/automatizacion-de-la-casa.png" alt="Icono" style="width: 20px; height: 20px; object-fit: contain;">
+                        Catálogo
+                    </a>
+                </li>
+
                 {% if current_user.rol == 'fabrica' %}
-                <a class="nav-link" href="{{ url_for('gestionar_muebles') }}">
-                <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794260163/las-compras-en-linea.png" 
-              alt="Icono"  style="width: 24px; height: 24px; object-fit: contain;">
-                    Gestión Fábrica</a>
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('gestionar_muebles') }}">
+                        <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794260163/las-compras-en-linea.png" alt="Icono" style="width: 20px; height: 20px; object-fit: contain;">
+                        Gestión Fábrica
+                    </a>
+                </li>
                 {% endif %}
-                <a class="nav-link" href="{{ url_for('historial_ventas') }}">
-                    <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794260337/carro-de-la-carretilla.png" 
-              alt="Icono"  style="width: 24px; height: 24px; object-fit: contain;">Historial Ventas</a>
-            </div>
-            
-            <div class="navbar-nav">
-                <span class="navbar-text me-3"> 
-                    <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794260634/persona-de-libre-dedicacion.png" 
-              alt="Icono"  style="width: 24px; height: 24px; object-fit: contain;"> {{ current_user.username }} ({{ current_user.nombre_local }})</span>
+                
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('historial_ventas') }}">
+                        <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794260337/carro-de-la-carretilla.png" alt="Icono" style="width: 20px; height: 20px; object-fit: contain;">
+                        Historial Ventas
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Sección de Usuario y Salir -->
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2 mt-3 mt-lg-0">
+                <span class="navbar-text small text-muted d-flex align-items-center gap-2">
+                    <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794260634/persona-de-libre-dedicacion.png" alt="Icono" style="width: 20px; height: 20px; object-fit: contain;"> 
+                    {{ current_user.username }} ({{ current_user.nombre_local }})
+                </span>
                 <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">Cerrar Sesión</a>
             </div>
             {% endif %}
         </div>
-    </nav>
+    </div>
+</nav
 
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}

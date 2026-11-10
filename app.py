@@ -14,8 +14,7 @@ from sqlalchemy import func
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave_secreta_super_segura')
 
-# Configuración de base de datos (Render PostgreSQL o SQLite local)
-# 1. Configuración de la URL de la base de datos (PostgreSQL en Render o SQLite local)
+# --- CONFIGURACIÓN DE BASE DE DATOS Y APP ---
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///armarios.db')
 if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
@@ -23,49 +22,10 @@ if db_url and db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Configuración de subida de imágenes
+# Configuración de subida de imágenes (Respaldo local)
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# 2. Inicializamos SQLAlchemy (¡Aquí va esta línea!)
-db = SQLAlchemy(app)
-
-# 3. Bloque para actualizar columnas automáticamente en Render (PostgreSQL)
-with app.app_context():
-    db.create_all()
-    try:
-        # Añade las columnas nuevas
-        db.session.execute(db.text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS cliente_nombre VARCHAR(100);"))
-        db.session.execute(db.text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS cliente_telefono VARCHAR(50);"))
-        db.session.execute(db.text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS cliente_direccion VARCHAR(200);"))
-        db.session.execute(db.text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS localidad_bogota VARCHAR(50);"))
-        db.session.execute(db.text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS cliente_piso VARCHAR(50);"))
-        db.session.execute(db.text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS comentario_venta TEXT;"))
-        
-        # Elimina la columna vieja de documento que ya no usas
-        db.session.execute(db.text("ALTER TABLE ventas DROP COLUMN IF EXISTS cliente_documento;"))
-        
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        print("Nota sobre la actualización de columnas:", e)
-
-# --- 2. MODELOS DE LA BASE DE DATOS ---
-class Usuario(UserMixin, db.Model):
-    # ... tus modelos ...
-
-# --- 2. MODELOS DE LA BASE DE DATOS ---
-
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Configuración de subida de imágenes locales (respaldo)
-UPLOAD_FOLDER = os.path.join('static', 'uploads')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-
 
 # Configuración de Cloudinary
 cloudinary.config(
@@ -74,10 +34,14 @@ cloudinary.config(
     api_secret = 'HW8Wklq-2FgJrZsqsNlQPhIw5vk'
 )
 
+# Inicialización única de SQLAlchemy y LoginManager
+db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'  # type: ignore
 
-
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
 # --- 2. MODELOS DE LA BASE DE DATOS ---
 
 class Usuario(UserMixin, db.Model):
@@ -129,9 +93,6 @@ class Venta(db.Model):
     cliente_piso = db.Column(db.String(50), nullable=True)
     comentario_venta = db.Column(db.Text, nullable=True)
 
-@login_manager.user_loader
-def load_user(user_id):
-    return Usuario.query.get(int(user_id))
 
 
 # --- 3. CREACIÓN DE TABLAS Y USUARIOS GLOBAL (Para Render y Local) ---

@@ -1,56 +1,111 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="d-flex justify-content-end mb-3">
-    <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimir Factura / Guardar PDF</button>
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Tarjeta principal de la Factura -->
+            <div class="card shadow-lg border-0">
+                <!-- Cabecera de la Factura -->
+                <div class="card-header bg-dark text-white p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0 fw-bold">FACTURA DE VENTA</h3>
+                        <p class="mb-0 text-muted small">Sistema de Inventario de Armarios</p>
+                    </div>
+                    <div class="text-end">
+                        <h4 class="text-warning mb-0">{{ venta.numero_factura }}</h4>
+                        <small>{{ venta.fecha.strftime('%d/%m/%Y %H:%M') }}</small>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- Información del Vendedor y Localidad -->
+                    <div class="row mb-4">
+                        <div class="col-sm-6">
+                            <h6 class="text-secondary fw-bold">DATOS DEL VENDEDOR</h6>
+                            <p class="mb-1"><strong>Vendedor:</strong> {{ venta.vendedor.nombre }}</p>
+                            <p class="mb-1"><strong>Local / Sucursal:</strong> {{ venta.vendedor.nombre_local }}</p>
+                        </div>
+                        <div class="col-sm-6 text-sm-end">
+                            <h6 class="text-secondary fw-bold">UBICACIÓN DE ENTREGA</h6>
+                            <p class="mb-1"><strong>Localidad Bogotá:</strong> {{ venta.localidad_bogota }}</p>
+                            <p class="mb-1"><strong>Piso / Apto:</strong> {{ venta.cliente_piso if venta.cliente_piso else 'No especificado' }}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Datos del Cliente -->
+                    <div class="mb-4">
+                        <h6 class="text-secondary fw-bold">DATOS DEL CLIENTE</h6>
+                        <p class="mb-1"><strong>Nombre:</strong> {{ venta.cliente_nombre }}</p>
+                        <p class="mb-1"><strong>Teléfono:</strong> {{ venta.cliente_telefono if venta.cliente_telefono else 'No registrado' }}</p>
+                        <p class="mb-1"><strong>Dirección:</strong> {{ venta.cliente_direccion if venta.cliente_direccion else 'No registrada' }}</p>
+                    </div>
+
+                    <!-- Detalle del Producto (Tabla limpia) -->
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Descripción del Mueble</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Precio Unitario</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>{{ venta.mueble.nombre }}</strong></td>
+                                    <td class="text-center">{{ venta.cantidad }}</td>
+                                    <td class="text-end">${{ "{:,.2f}".format(venta.precio_unitario) }}</td>
+                                    <td class="text-end fw-bold">${{ "{:,.2f}".format(venta.total) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Comentarios u Observaciones (Si existen) -->
+                    {% if venta.comentario_venta %}
+                    <div class="alert alert-secondary p-3 mb-4">
+                        <h6 class="fw-bold mb-1"><i class="fa-solid fa-comment-dots"></i> Observaciones de Entrega:</h6>
+                        <p class="mb-0 small">{{ venta.comentario_venta }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Total a Pagar -->
+                    <div class="d-flex justify-content-end align-items-center mb-4">
+                        <h4 class="me-3 text-secondary">Total a Pagar:</h4>
+                        <h3 class="text-success fw-bold">${{ "{:,.2f}".format(venta.total) }}</h3>
+                    </div>
+
+                    <!-- Botones de Acción (Imprimir / Volver) -->
+                    <div class="d-flex justify-content-between d-print-none">
+                        <a href="{{ url_for('historial_ventas') }}" class="btn btn-secondary">
+                            <i class="fa-solid fa-arrow-left"></i> Volver al Historial
+                        </a>
+                        <button onclick="window.print()" class="btn btn-primary">
+                            <i class="fa-solid fa-print"></i> Imprimir / Guardar PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="card shadow p-4 bg-white" id="factura">
-    <div class="row border-bottom pb-3 mb-3">
-        <div class="col-6">
-            <h3>FABRICA DE ARMARIOS S.A.</h3>
-            <p class="mb-0">Vendido por: <strong>{{ venta.vendedor.nombre_local }}</strong></p>
-            <p class="mb-0">Vendedor: {{ venta.vendedor.username }}</p>
-        </div>
-        <div class="col-6 text-end">
-            <h4 class="text-primary">FACTURA DE VENTA</h4>
-            <h5>{{ venta.numero_factura }}</h5>
-            <p>Fecha: {{ venta.fecha.strftime('%d/%m/%Y %H:%M') }}</p>
-        </div>
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-12">
-            <h5>Cliente:</h5>
-            <p class="mb-1"><strong>Nombre:</strong> {{ venta.cliente_nombre }}</p>
-            <p class="mb-1"><strong>Documento:</strong> {{ venta.cliente_documento }}</p>
-            <p class="mb-1"><strong>Teléfono:</strong> {{ venta.cliente_telefono }}</p>
-            <p class="mb-1"><strong>Dirección:</strong> {{ venta.cliente_direccion }}</p>
-        </div>
-    </div>
-
-    <table class="table table-bordered mb-4">
-        <thead class="table-light">
-            <tr>
-                <th>Producto / Armario</th>
-                <th class="text-center">Cantidad</th>
-                <th class="text-end">Precio Unitario</th>
-                <th class="text-end">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>{{ venta.mueble.nombre }}</td>
-                <td class="text-center">{{ venta.cantidad }}</td>
-                <td class="text-end">${{ "{:,.2f}".format(venta.precio_unitario) }}</td>
-                <td class="text-end">${{ "{:,.2f}".format(venta.total) }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="row">
-        <div class="col-6 ms-auto text-end">
-            <h4>Total Pagado: ${{ "{:,.2f}".format(venta.total) }}</h4>
-        </div>
-    </div>
-</div>
+<!-- Estilo CSS opcional para ocultar elementos al imprimir en papel o PDF -->
+<style>
+    @media print {
+        body {
+            background-color: white !important;
+        }
+        .navbar, footer, .d-print-none {
+            display: none !important;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+    }
+</style>
 {% endblock %}

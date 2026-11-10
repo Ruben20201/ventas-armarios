@@ -16,12 +16,57 @@
                         <label class="form-label">Cantidad a Comprar</label>
                         <input type="number" name="cantidad" value="1" min="1" max="{{ mueble.stock }}" class="form-control" required>
                     </div>
+                    <div class="row mb-4">
+                    <div class="mb-3">
+    <label class="form-label"><strong>¿Quién realizó la venta? (Vendedor)</strong></label>
+    <select name="vendedor_id" class="form-control" required>
+        <option value="" disabled selected>Seleccione el vendedor...</option>
+        {% for v in vendedores %}
+            <option value="{{ v.id }}">{{ v.username }} - {{ v.nombre_local }}</option>
+        {% endfor %}
+    </select>
+</div>
 
                     <h5 class="mt-4">Datos del Cliente (para Factura)</h5>
                     <div class="mb-2"><label>Nombre Completo</label><input type="text" name="cliente_nombre" class="form-control" required></div>
-                    <div class="mb-2"><label>Documento / Cédula / NIT</label><input type="text" name="cliente_documento" class="form-control" required></div>
+                    
                     <div class="mb-2"><label>Teléfono</label><input type="text" name="cliente_telefono" class="form-control"></div>
                     <div class="mb-3"><label>Dirección de Entrega</label><input type="text" name="cliente_direccion" class="form-control"></div>
+                    <div class="mb-3"> <label class="form-label"><strong>Localidad de Bogotá</strong></label>   <select name="localidad_bogota" class="form-control" required>
+                          <option value="" disabled selected>Seleccione la localidad...</option>
+                          <option value="Usaquén">Usaquén</option>
+                          <option value="Chapinero">Chapinero</option>
+                          <option value="Santa Fe">Santa Fe</option>
+                          <option value="San Cristóbal">San Cristóbal</option>
+                          <option value="Usme">Usme</option>
+                          <option value="Tunjuelito">Tunjuelito</option>
+                          <option value="Bosa">Bosa</option>
+                         <option value="Kennedy">Kennedy</option>
+                         <option value="Fontibón">Fontibón</option>
+                         <option value="Engativá">Engativá</option>
+                         <option value="Suba">Suba</option>
+                         <option value="Barrios Unidos">Barrios Unidos</option>
+                         <option value="Teusaquillo">Teusaquillo</option>
+                         <option value="Los Mártires">Los Mártires</option>
+                         <option value="Antonio Nariño">Antonio Nariño</option>
+                         <option value="Puente Aranda">Puente Aranda</option>
+                         <option value="La Candelaria">La Candelaria</option>
+                         <option value="Rafael Uribe Uribe">Rafael Uribe Uribe</option>
+                         <option value="Ciudad Bolívar">Ciudad Bolívar</option>
+                         <option value="Sumapaz">Sumapaz</option>
+                       </select>
+                    </div>
+                    <!-- Campo para el Piso -->
+                        <div class="mb-2">
+                          <label class="form-label">Número de Piso / Apartamento</label>
+                          <input type="text" name="cliente_piso" class="form-control" placeholder="Ej: Piso 5, Apto 502 (Opcional)">
+                        </div>
+
+                    <!-- Campo para Comentario Opcional -->
+                        <div class="mb-3">
+                           <label class="form-label">Comentarios o Indicaciones de Entrega <span class="text-muted">(Opcional)</span></label>
+                           <textarea name="comentario_venta" class="form-control" rows="2" placeholder="Ej: Llamar antes de llegar, dejar en portería..."></textarea>
+                        </div>
 
                     <button type="submit" class="btn btn-success w-100">Confirmar Venta y Emitir Factura</button>
                 </form>

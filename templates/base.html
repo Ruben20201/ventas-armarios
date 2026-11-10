@@ -47,6 +47,22 @@
                         Historial Ventas
                     </a>
                 </li>
+
+                <!-- Enlace para ver el Reporte de Ventas por Vendedor -->
+<li class="nav-item">
+    <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('ventas_por_vendedor') }}">
+        <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794260337/carro-de-la-carretilla.png" alt="Icono" style="width: 20px; height: 20px; object-fit: contain;">
+        Ventas por Vendedor
+    </a>
+</li>
+
+<!-- Enlace para Agregar un Nuevo Vendedor al Directorio -->
+<li class="nav-item">
+    <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('agregar_vendedor') }}">
+        <img src="https://res.cloudinary.com/ljsxuy3b/image/upload/v1794259567/automatizacion-de-la-casa.png" alt="Icono" style="width: 20px; height: 20px; object-fit: contain;">
+        Agregar Vendedor
+    </a>
+</li>
             </ul>
 
             <!-- Sección de Usuario y Salir -->

@@ -8,6 +8,7 @@ from werkzeug.utils import secure_filename
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+from sqlalchemy import func
 
 # 1. Inicialización de la App Flask
 app = Flask(__name__)
@@ -70,20 +71,25 @@ class Venta(db.Model):
     numero_factura = db.Column(db.String(20), unique=True, nullable=False)
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Relación con el vendedor
     vendedor_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     vendedor = db.relationship('Usuario', backref='ventas')
-    
+
+    # Relación con el mueble
     mueble_id = db.Column(db.Integer, db.ForeignKey('mueble.id'), nullable=False)
-    mueble = db.relationship('Mueble', backref=db.backref('ventas_asociadas', cascade='all, delete-orphan', lazy=True))
-    
+    mueble = db.relationship('Mueble', backref='ventas')
+
     cantidad = db.Column(db.Integer, nullable=False)
     precio_unitario = db.Column(db.Float, nullable=False)
     total = db.Column(db.Float, nullable=False)
     
-    cliente_nombre = db.Column(db.String(100), nullable=False)
-    cliente_documento = db.Column(db.String(50), nullable=False)
+    # ¡Asegúrate de tener estas columnas del cliente agregadas aquí!
+    cliente_nombre = db.Column(db.String(100), nullable=True)
     cliente_telefono = db.Column(db.String(50), nullable=True)
     cliente_direccion = db.Column(db.String(200), nullable=True)
+    localidad_bogota = db.Column(db.String(50), nullable=True)
+    cliente_piso = db.Column(db.String(50), nullable=True)
+    comentario_venta = db.Column(db.Text, nullable=True)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -232,9 +238,12 @@ def actualizar_stock(id):
     return redirect(url_for('gestionar_muebles'))
 
 @app.route('/venta/nueva/<int:mueble_id>', methods=['GET', 'POST'])
-@login_required
+@login_required # O puedes quitar esta línea si el cajero general tampoco requiere login estricto
 def nueva_venta(mueble_id):
     mueble = Mueble.query.get_or_404(mueble_id)
+    
+    # Consultamos todos los vendedores registrados en la base de datos
+    vendedores = Usuario.query.all()
 
     if request.method == 'POST':
         cantidad = int(request.form.get('cantidad') or 1)
@@ -251,17 +260,22 @@ def nueva_venta(mueble_id):
         precio_unitario = mueble.precio
         total = cantidad * precio_unitario
 
+        # Capturamos el ID del vendedor que se seleccionó en el menú desplegable del formulario
+        vendedor_id_seleccionado = request.form.get('vendedor_id')
+
         venta = Venta(
-            numero_factura=num_factura,  # type: ignore
-            vendedor_id=current_user.id,  # type: ignore
-            mueble_id=mueble.id,  # type: ignore
-            cantidad=cantidad,  # type: ignore
-            precio_unitario=precio_unitario,  # type: ignore
-            total=total,  # type: ignore
-            cliente_nombre=request.form.get('cliente_nombre'),  # type: ignore
-            cliente_documento=request.form.get('cliente_documento'),  # type: ignore
-            cliente_telefono=request.form.get('cliente_telefono'),  # type: ignore
-            cliente_direccion=request.form.get('cliente_direccion')  # type: ignore
+            numero_factura=num_factura,# type: ignore
+            vendedor_id=vendedor_id_seleccionado,  # # type: ignore
+            mueble_id=mueble.id,# type: ignore
+            cantidad=cantidad,# type: ignore
+            precio_unitario=precio_unitario,# type: ignore
+            total=total,# type: ignore
+            cliente_nombre=request.form.get('cliente_nombre'),# type: ignore
+            cliente_telefono=request.form.get('cliente_telefono'),# type: ignore
+            cliente_direccion=request.form.get('cliente_direccion'),# type: ignore
+            localidad_bogota=request.form.get('localidad_bogota'),# type: ignore
+            cliente_piso=request.form.get('cliente_piso'),# type: ignore
+            comentario_venta=request.form.get('comentario_venta')# type: ignore
         )
 
         db.session.add(venta)
@@ -270,7 +284,8 @@ def nueva_venta(mueble_id):
         flash('Venta registrada con éxito. Generando factura...', 'success')
         return redirect(url_for('ver_factura', venta_id=venta.id))
 
-    return render_template('nueva_venta.html', mueble=mueble)
+    # Le pasamos la lista de vendedores al HTML
+    return render_template('nueva_venta.html', mueble=mueble, vendedores=vendedores)
 
 @app.route('/factura/<int:venta_id>')
 @login_required
@@ -287,6 +302,37 @@ def historial_ventas():
         ventas = Venta.query.filter_by(vendedor_id=current_user.id).order_by(Venta.fecha.desc()).all()
     return render_template('historial_ventas.html', ventas=ventas)
 
+
+
+@app.route('/admin/agregar-vendedor', methods=['GET', 'POST'])
+@login_required # O puedes quitar esta línea si prefieres acceso libre
+def agregar_vendedor():
+    if request.method == 'POST':
+        nombre_vendedor = request.form.get('username')
+        local_vendedor = request.form.get('nombre_local')
+        
+        # Guardamos el nuevo vendedor en la base de datos (con una contraseña temporal por defecto para cumplir con el modelo)
+        # type: ignore[call-arg]
+        nuevo_vendedor = Usuario(
+            username=nombre_vendedor,# type: ignore
+            nombre_local=local_vendedor,# type: ignore
+            password_hash='sin_password_necesaria',# type: ignore
+            rol='vendedor'# type: ignore
+        )
+        db.session.add(nuevo_vendedor)
+        db.session.commit()
+        
+        flash(f'¡Vendedor "{nombre_vendedor}" agregado a la lista con éxito!', 'success')
+        return redirect(url_for('ventas_por_vendedor'))
+        
+    return render_template('agregar_vendedor.html')
+
+@app.route('/admin/ventas-por-vendedor')
+@login_required
+def ventas_por_vendedor():
+    # Obtenemos todos los vendedores registrados en el sistema
+    vendedores = Usuario.query.all()
+    return render_template('admin_ventas.html', vendedores=vendedores)
 
 # --- 6. BLOQUE LOCAL ABSOLUTO (Solo para ejecutar en tu PC) ---
 if __name__ == '__main__':

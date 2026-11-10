@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Agregar Nuevo Vendedor al Directorio</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Nombre del Vendedor</strong></label>
+                            <input type="text" name="username" class="form-control" placeholder="Ej: Ana María Gómez" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Local o Sucursal</strong></label>
+                            <input type="text" name="nombre_local" class="form-control" placeholder="Ej: Local Principal, Bodega Norte...">
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Guardar Vendedor</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

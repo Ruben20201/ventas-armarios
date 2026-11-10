@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4"><i class="fa-solid fa-chart-pie"></i> Reporte de Ventas por Vendedor</h2>
+
+    <div class="accordion" id="accordionVendedores">
+        {% for v in vendedores %}
+            {% if v.ventas %}
+            <div class="accordion-item mb-3 shadow-sm">
+                <!-- Cabecera del Acordeón (Siempre visible con el nombre y totales) -->
+                <h2 class="accordion-header" id="heading{{ v.id }}">
+                    <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ v.id }}" aria-expanded="false" aria-controls="collapse{{ v.id }}">
+                        <div class="w-100 d-flex justify-content-between align-items-center pe-3">
+                            <span>
+                                <i class="fa-solid fa-user-tie me-2"></i> 
+                                <strong>{{ v.username }}</strong> 
+                                <span class="text-muted small ms-2">({{ v.nombre_local }})</span>
+                            </span>
+                            <span>
+                                <span class="badge bg-primary me-2">{{ v.ventas|length }} ventas</span>
+                                <span class="text-success fw-bold">
+                                    ${{ v.ventas | map(attribute='total') | sum | round(2) }}
+                                </span>
+                            </span>
+                        </div>
+                    </button>
+                </h2>
+
+                <!-- Contenido Desplegable (Detalle de los muebles vendidos) -->
+                <div id="collapse{{ v.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ v.id }}" data-bs-parent="#accordionVendedores">
+                    <div class="accordion-body bg-light">
+                        <h6 class="text-secondary mb-3">Muebles y Facturas de este Vendedor:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered align-middle mb-0">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>N° Factura</th>
+                                        <th>Fecha</th>
+                                        <th>Mueble Vendido</th>
+                                        <th>Cantidad</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for venta in v.ventas %}
+                                    <tr>
+                                        <td><strong>{{ venta.numero_factura }}</strong></td>
+                                        <td>{{ venta.fecha.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>{{ venta.mueble.nombre if venta.mueble else 'Mueble no disponible' }}</td>
+                                        <td>{{ venta.cantidad }}</td>
+                                        <td class="text-success fw-bold">${{ venta.total }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('historial_ventas') }}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> Volver al Historial General
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -27,10 +27,10 @@ UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Inicializamos SQLAlchemy aquí
+# ---> ÚNICA INSTANCIA DE SQLALCHEMY <---
 db = SQLAlchemy(app)
 
-# --- AHORA SÍ: El bloque para actualizar columnas automáticamente va aquí abajo ---
+# Bloque para actualizar columnas automáticamente en Render (PostgreSQL)
 with app.app_context():
     db.create_all()
     try:
@@ -55,7 +55,7 @@ UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-db = SQLAlchemy(app)
+
 
 # Configuración de Cloudinary
 cloudinary.config(

@@ -27,6 +27,34 @@ UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Inicializamos SQLAlchemy aquí
+db = SQLAlchemy(app)
+
+# --- AHORA SÍ: El bloque para actualizar columnas automáticamente va aquí abajo ---
+with app.app_context():
+    db.create_all()
+    try:
+        db.session.execute(db.text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS cliente_nombre VARCHAR(100);"))
+        db.session.execute(db.text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS cliente_telefono VARCHAR(50);"))
+        db.session.execute(db.text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS cliente_direccion VARCHAR(200);"))
+        db.session.execute(db.text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS localidad_bogota VARCHAR(50);"))
+        db.session.execute(db.text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS cliente_piso VARCHAR(50);"))
+        db.session.execute(db.text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS comentario_venta TEXT;"))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print("Nota sobre la actualización de columnas:", e)
+
+# --- 2. MODELOS DE LA BASE DE DATOS ---
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Configuración de subida de imágenes locales (respaldo)
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 db = SQLAlchemy(app)
 
 # Configuración de Cloudinary

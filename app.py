@@ -109,13 +109,16 @@ with app.app_context():
         db.session.execute(db.text("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS rol VARCHAR(50) DEFAULT 'vendedor';"))
         db.session.execute(db.text("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS nombre_local VARCHAR(100);"))
         
-        # Migraciones para la tabla muebles (asegurar columna modelo y demás atributos)
+        # Migraciones para la tabla muebles
         db.session.execute(db.text("ALTER TABLE muebles ADD COLUMN IF NOT EXISTS modelo VARCHAR(100);"))
         db.session.execute(db.text("ALTER TABLE muebles ADD COLUMN IF NOT EXISTS descripcion TEXT;"))
         db.session.execute(db.text("ALTER TABLE muebles ADD COLUMN IF NOT EXISTS precio FLOAT;"))
         db.session.execute(db.text("ALTER TABLE muebles ADD COLUMN IF NOT EXISTS stock INTEGER;"))
         db.session.execute(db.text("ALTER TABLE muebles ADD COLUMN IF NOT EXISTS ubicacion VARCHAR(100);"))
         db.session.execute(db.text("ALTER TABLE muebles ADD COLUMN IF NOT EXISTS imagen VARCHAR(255);"))
+        
+        # Permitir que la columna antigua 'nombre' admita nulos para que no bloquee el guardado
+        db.session.execute(db.text("ALTER TABLE muebles ALTER COLUMN nombre DROP NOT NULL;"))
         
         db.session.commit()
     except Exception as e:
@@ -134,7 +137,6 @@ with app.app_context():
         db.session.add(vendedor)
         
     db.session.commit()
-
 
 # --- 4. LISTA DE IMÁGENES PRESELECCIONADAS DE CLOUDINARY ---
 IMAGENES_PRESELECCIONADAS = [

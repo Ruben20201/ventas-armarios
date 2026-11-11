@@ -125,16 +125,22 @@ with app.app_context():
         db.session.rollback()
         print("Nota de migración:", e)
 
-    # Creación de usuarios por defecto si no existen
-    if not Usuario.query.filter_by(username='fabrica').first():
+   # Creación o actualización de usuarios por defecto
+    fabrica = Usuario.query.filter_by(username='fabrica').first()
+    if not fabrica:
         fabrica = Usuario(username='fabrica', rol='fabrica', nombre_local='Fábrica Central Armarios')  # type: ignore
         fabrica.set_password('admin123')
         db.session.add(fabrica)
+    elif not fabrica.password:  # Si la contraseña es nula, la actualizamos
+        fabrica.set_password('admin123')
 
-    if not Usuario.query.filter_by(username='vendedor1').first():
+    vendedor = Usuario.query.filter_by(username='vendedor1').first()
+    if not vendedor:
         vendedor = Usuario(username='vendedor1', rol='vendedor', nombre_local='Local Centro')  # type: ignore
         vendedor.set_password('vendedor123')
         db.session.add(vendedor)
+    elif not vendedor.password:  # Si la contraseña es nula, la actualizamos
+        vendedor.set_password('vendedor123')
         
     db.session.commit()
 

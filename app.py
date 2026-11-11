@@ -73,17 +73,15 @@ class Venta(db.Model):
     numero_factura = db.Column(db.String(20), unique=True, nullable=False)
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relación con el vendedor
     vendedor_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     vendedor = db.relationship('Usuario', backref='ventas')
-    
-    # Relación con el mueble (¡Asegúrate de que diga 'muebles.id' en plural!)
     mueble_id = db.Column(db.Integer, db.ForeignKey('muebles.id'), nullable=False)
     mueble = db.relationship('Mueble', backref='ventas')
     
     cantidad = db.Column(db.Integer, nullable=False)
     precio_unitario = db.Column(db.Float, nullable=False)
     total = db.Column(db.Float, nullable=False)
+    # ... campos del cliente ...
     
     # Columnas de datos del cliente
     cliente_nombre = db.Column(db.String(100), nullable=True)

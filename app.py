@@ -44,28 +44,32 @@ def load_user(user_id):
     return Usuario.query.get(int(user_id))
 # --- 2. MODELOS DE LA BASE DE DATOS ---
 
-class Usuario(UserMixin, db.Model):
+class Usuario(db.Model, UserMixin):
     __tablename__ = 'usuarios'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-    rol = db.Column(db.String(20), nullable=False) # 'fabrica' o 'vendedor'
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
     nombre_local = db.Column(db.String(100), nullable=True)
+    ventas = db.relationship('Venta', back_populates='vendedor', cascade='all, delete-orphan')
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+    # Agrega estos métodos para que set_password y check_password funcionen:
+    def set_password(self, password_texto):
+        self.password = generate_password_hash(password_texto)
 
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+    def check_password(self, password_texto):
+        return check_password_hash(self.password, password_texto)
 
 class Mueble(db.Model):
+    __tablename__ = 'muebles'
     id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False)
+    modelo = db.Column(db.String(100), nullable=False)
     descripcion = db.Column(db.Text, nullable=True)
     precio = db.Column(db.Float, nullable=False)
-    stock = db.Column(db.Integer, default=0)
+    stock = db.Column(db.Integer, nullable=False)
+    ubicacion = db.Column(db.String(100), nullable=True)
     imagen = db.Column(db.String(255), nullable=True)
-    ubicacion = db.Column(db.String(50), default='Fábrica')
+    ventas = db.relationship('Venta', back_populates='mueble', cascade='all, delete-orphan')
+
 
 class Venta(db.Model):
     __tablename__ = 'ventas'
@@ -73,13 +77,13 @@ class Venta(db.Model):
     numero_factura = db.Column(db.String(20), unique=True, nullable=False)
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relación con el vendedor
+    # Relación explícita con Usuario
     vendedor_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
-    vendedor = db.relationship('Usuario', foreign_keys=[vendedor_id], backref='ventas')
+    vendedor = db.relationship('Usuario', back_populates='ventas')
     
-    # Relación limpia y directa con la tabla en plural 'muebles'
+    # Relación explícita con Mueble
     mueble_id = db.Column(db.Integer, db.ForeignKey('muebles.id'), nullable=False)
-    mueble = db.relationship('Mueble', backref='ventas')
+    mueble = db.relationship('Mueble', back_populates='ventas')
     
     cantidad = db.Column(db.Integer, nullable=False)
     precio_unitario = db.Column(db.Float, nullable=False)

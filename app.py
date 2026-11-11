@@ -102,6 +102,16 @@ class Venta(db.Model):
 with app.app_context():
     db.create_all()
     
+    # Asegurar columnas nuevas en PostgreSQL si la tabla ya existía
+    try:
+        db.session.execute(db.text("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS password VARCHAR(200);"))
+        db.session.execute(db.text("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS rol VARCHAR(50) DEFAULT 'vendedor';"))
+        db.session.execute(db.text("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS nombre_local VARCHAR(100);"))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print("Nota de migración:", e)
+
     # Creación de usuarios por defecto si no existen
     if not Usuario.query.filter_by(username='fabrica').first():
         fabrica = Usuario(username='fabrica', rol='fabrica', nombre_local='Fábrica Central Armarios')  # type: ignore

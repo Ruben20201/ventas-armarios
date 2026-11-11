@@ -70,6 +70,16 @@ class Mueble(db.Model):
     ubicacion = db.Column(db.String(100), nullable=True)
     imagen = db.Column(db.String(255), nullable=True)
     ventas = db.relationship('Venta', back_populates='mueble', cascade='all, delete-orphan')
+    
+# --- NUEVO MODELO DE CLIENTES ---
+class Cliente(db.Model):
+    __tablename__ = 'clientes'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    telefono = db.Column(db.String(50), unique=True, nullable=False)
+    direccion = db.Column(db.String(200), nullable=True)
+    localidad = db.Column(db.String(50), nullable=True)
+    ventas = db.relationship('Venta', back_populates='cliente_relacionado')
 
 
 class Venta(db.Model):
@@ -149,15 +159,6 @@ with app.app_context():
         
     db.session.commit()
 
-# --- NUEVO MODELO DE CLIENTES ---
-class Cliente(db.Model):
-    __tablename__ = 'clientes'
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False)
-    telefono = db.Column(db.String(50), unique=True, nullable=False)
-    direccion = db.Column(db.String(200), nullable=True)
-    localidad = db.Column(db.String(50), nullable=True)
-    ventas = db.relationship('Venta', back_populates='cliente_relacionado')
 
 # --- MODIFICACIONES EN EL MODELO VENTA ---
 # Agregar una relación opcional con la tabla Clientes y un campo de método de pago:

@@ -70,7 +70,7 @@ class Mueble(db.Model):
     ubicacion = db.Column(db.String(100), nullable=True)
     imagen = db.Column(db.String(255), nullable=True)
     ventas = db.relationship('Venta', back_populates='mueble', cascade='all, delete-orphan')
-    
+
 # --- NUEVO MODELO DE CLIENTES ---
 class Cliente(db.Model):
     __tablename__ = 'clientes'
@@ -388,10 +388,9 @@ def dashboard():
                            cantidad_ventas=cantidad_ventas, total_muebles=total_muebles)
 
 # B. Historial con Filtros por Fechas y Vendedor
-@app.route('/ventas/historial', methods=['GET', 'POST'])
-@login_required
 
-@app.route('/ventas/historial')
+# B. Historial con Filtros por Fechas y Vendedor
+@app.route('/ventas/historial', methods=['GET', 'POST'])
 @login_required
 def historial_ventas():
     fecha_inicio = request.args.get('fecha_inicio')

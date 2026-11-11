@@ -195,7 +195,8 @@ def gestionar_muebles():
         return redirect(url_for('catalogo'))
 
     if request.method == 'POST':
-        modelo_mueble = request.form.get('nombre') # Corregido al campo real 'modelo'
+        # Cambiamos 'nombre' por 'modelo' para que coincida exactamente con el input del HTML
+        modelo_mueble = request.form.get('modelo') or request.form.get('nombre')
         descripcion = request.form.get('descripcion')
         precio = float(request.form.get('precio') or 0)
         stock = int(request.form.get('stock') or 0)
@@ -327,12 +328,15 @@ def agregar_vendedor():
         nombre_vendedor = request.form.get('username')
         local_vendedor = request.form.get('nombre_local')
         
+        # Creamos el objeto asignando los campos correctos del modelo
         nuevo_vendedor = Usuario(
             username=nombre_vendedor,  # type: ignore
             nombre_local=local_vendedor,  # type: ignore
             rol='vendedor'  # type: ignore
         )
-        nuevo_vendedor.set_password('vendedor123') # Contraseña predeterminada segura
+        # Asignamos la contraseña de forma encriptada y segura
+        nuevo_vendedor.set_password('vendedor123')
+        
         db.session.add(nuevo_vendedor)
         db.session.commit()
         

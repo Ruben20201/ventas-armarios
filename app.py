@@ -42,6 +42,7 @@ login_manager.login_view = 'login'  # type: ignore
 @login_manager.user_loader
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
+
 # --- 2. MODELOS DE LA BASE DE DATOS ---
 
 class Usuario(db.Model, UserMixin):
@@ -50,9 +51,9 @@ class Usuario(db.Model, UserMixin):
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     nombre_local = db.Column(db.String(100), nullable=True)
+    rol = db.Column(db.String(50), nullable=False, default='vendedor')  # <- Agregado para control de roles
     ventas = db.relationship('Venta', back_populates='vendedor', cascade='all, delete-orphan')
 
-    # Agrega estos métodos para que set_password y check_password funcionen:
     def set_password(self, password_texto):
         self.password = generate_password_hash(password_texto)
 
@@ -62,7 +63,7 @@ class Usuario(db.Model, UserMixin):
 class Mueble(db.Model):
     __tablename__ = 'muebles'
     id = db.Column(db.Integer, primary_key=True)
-    modelo = db.Column(db.String(100), nullable=False)
+    modelo = db.Column(db.String(100), nullable=False)  # <- Nombre unificado en la base de datos
     descripcion = db.Column(db.Text, nullable=True)
     precio = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False)
@@ -163,7 +164,7 @@ def eliminar_mueble(id):
     db.session.delete(mueble)
     db.session.commit()
     
-    flash(f'El mueble "{mueble.nombre}" ha sido eliminado correctamente.', 'success')
+    flash(f'El mueble "{mueble.modelo}" ha sido eliminado correctamente.', 'success')
     return redirect(url_for('gestionar_muebles'))
 
 @app.route('/muebles/gestionar', methods=['GET', 'POST'])
@@ -174,7 +175,7 @@ def gestionar_muebles():
         return redirect(url_for('catalogo'))
 
     if request.method == 'POST':
-        nombre = request.form.get('nombre')
+        modelo_mueble = request.form.get('nombre') # Corregido al campo real 'modelo'
         descripcion = request.form.get('descripcion')
         precio = float(request.form.get('precio') or 0)
         stock = int(request.form.get('stock') or 0)
@@ -192,7 +193,7 @@ def gestionar_muebles():
             filename = imagen_elegida
 
         nuevo_mueble = Mueble(
-            nombre=nombre,  # type: ignore
+            modelo=modelo_mueble,  # type: ignore
             descripcion=descripcion,  # type: ignore
             precio=precio,  # type: ignore
             stock=stock,  # type: ignore
@@ -221,7 +222,7 @@ def cambiar_ubicacion(id):
         mueble.ubicacion = 'Fábrica'
 
     db.session.commit()
-    flash(f'La ubicación de {mueble.nombre} ha sido actualizada con éxito.', 'success')
+    flash(f'La ubicación de {mueble.modelo} ha sido actualizada con éxito.', 'success')
     return redirect(url_for('catalogo'))
 
 @app.route('/muebles/actualizar_stock/<int:id>', methods=['POST'])
@@ -235,15 +236,13 @@ def actualizar_stock(id):
     nuevo_stock = int(request.form.get('stock') or 0)
     mueble.stock = nuevo_stock
     db.session.commit()
-    flash(f'Stock actualizado para {mueble.nombre}.', 'success')
+    flash(f'Stock actualizado para {mueble.modelo}.', 'success')
     return redirect(url_for('gestionar_muebles'))
 
 @app.route('/venta/nueva/<int:mueble_id>', methods=['GET', 'POST'])
-@login_required # O puedes quitar esta línea si el cajero general tampoco requiere login estricto
+@login_required
 def nueva_venta(mueble_id):
     mueble = Mueble.query.get_or_404(mueble_id)
-    
-    # Consultamos todos los vendedores registrados en la base de datos
     vendedores = Usuario.query.all()
 
     if request.method == 'POST':
@@ -261,22 +260,21 @@ def nueva_venta(mueble_id):
         precio_unitario = mueble.precio
         total = cantidad * precio_unitario
 
-        # Capturamos el ID del vendedor que se seleccionó en el menú desplegable del formulario
         vendedor_id_seleccionado = request.form.get('vendedor_id')
 
         venta = Venta(
-            numero_factura=num_factura,# type: ignore
-            vendedor_id=vendedor_id_seleccionado,  # # type: ignore
-            mueble_id=mueble.id,# type: ignore
-            cantidad=cantidad,# type: ignore
-            precio_unitario=precio_unitario,# type: ignore
-            total=total,# type: ignore
-            cliente_nombre=request.form.get('cliente_nombre'),# type: ignore
-            cliente_telefono=request.form.get('cliente_telefono'),# type: ignore
-            cliente_direccion=request.form.get('cliente_direccion'),# type: ignore
-            localidad_bogota=request.form.get('localidad_bogota'),# type: ignore
-            cliente_piso=request.form.get('cliente_piso'),# type: ignore
-            comentario_venta=request.form.get('comentario_venta')# type: ignore
+            numero_factura=num_factura,  # type: ignore
+            vendedor_id=vendedor_id_seleccionado,  # type: ignore
+            mueble_id=mueble.id,  # type: ignore
+            cantidad=cantidad,  # type: ignore
+            precio_unitario=precio_unitario,  # type: ignore
+            total=total,  # type: ignore
+            cliente_nombre=request.form.get('cliente_nombre'),  # type: ignore
+            cliente_telefono=request.form.get('cliente_telefono'),  # type: ignore
+            cliente_direccion=request.form.get('cliente_direccion'),  # type: ignore
+            localidad_bogota=request.form.get('localidad_bogota'),  # type: ignore
+            cliente_piso=request.form.get('cliente_piso'),  # type: ignore
+            comentario_venta=request.form.get('comentario_venta')  # type: ignore
         )
 
         db.session.add(venta)
@@ -285,7 +283,6 @@ def nueva_venta(mueble_id):
         flash('Venta registrada con éxito. Generando factura...', 'success')
         return redirect(url_for('ver_factura', venta_id=venta.id))
 
-    # Le pasamos la lista de vendedores al HTML
     return render_template('nueva_venta.html', mueble=mueble, vendedores=vendedores)
 
 @app.route('/factura/<int:venta_id>')
@@ -303,23 +300,19 @@ def historial_ventas():
         ventas = Venta.query.filter_by(vendedor_id=current_user.id).order_by(Venta.fecha.desc()).all()
     return render_template('historial_ventas.html', ventas=ventas)
 
-
-
 @app.route('/admin/agregar-vendedor', methods=['GET', 'POST'])
-@login_required # O puedes quitar esta línea si prefieres acceso libre
+@login_required
 def agregar_vendedor():
     if request.method == 'POST':
         nombre_vendedor = request.form.get('username')
         local_vendedor = request.form.get('nombre_local')
         
-        # Guardamos el nuevo vendedor en la base de datos (con una contraseña temporal por defecto para cumplir con el modelo)
-        # type: ignore[call-arg]
         nuevo_vendedor = Usuario(
-            username=nombre_vendedor,# type: ignore
-            nombre_local=local_vendedor,# type: ignore
-            password_hash='sin_password_necesaria',# type: ignore
-            rol='vendedor'# type: ignore
+            username=nombre_vendedor,  # type: ignore
+            nombre_local=local_vendedor,  # type: ignore
+            rol='vendedor'  # type: ignore
         )
+        nuevo_vendedor.set_password('vendedor123') # Contraseña predeterminada segura
         db.session.add(nuevo_vendedor)
         db.session.commit()
         
@@ -331,7 +324,6 @@ def agregar_vendedor():
 @app.route('/admin/ventas-por-vendedor')
 @login_required
 def ventas_por_vendedor():
-    # Obtenemos todos los vendedores registrados en el sistema
     vendedores = Usuario.query.all()
     return render_template('admin_ventas.html', vendedores=vendedores)
 

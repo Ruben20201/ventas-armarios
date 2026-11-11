@@ -102,11 +102,21 @@ class Venta(db.Model):
 with app.app_context():
     db.create_all()
     
-    # Asegurar columnas nuevas en PostgreSQL si la tabla ya existía
+    # Asegurar columnas nuevas en PostgreSQL si las tablas ya existían
     try:
+        # Migraciones para la tabla usuarios
         db.session.execute(db.text("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS password VARCHAR(200);"))
         db.session.execute(db.text("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS rol VARCHAR(50) DEFAULT 'vendedor';"))
         db.session.execute(db.text("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS nombre_local VARCHAR(100);"))
+        
+        # Migraciones para la tabla muebles (asegurar columna modelo y demás atributos)
+        db.session.execute(db.text("ALTER TABLE muebles ADD COLUMN IF NOT EXISTS modelo VARCHAR(100);"))
+        db.session.execute(db.text("ALTER TABLE muebles ADD COLUMN IF NOT EXISTS descripcion TEXT;"))
+        db.session.execute(db.text("ALTER TABLE muebles ADD COLUMN IF NOT EXISTS precio FLOAT;"))
+        db.session.execute(db.text("ALTER TABLE muebles ADD COLUMN IF NOT EXISTS stock INTEGER;"))
+        db.session.execute(db.text("ALTER TABLE muebles ADD COLUMN IF NOT EXISTS ubicacion VARCHAR(100);"))
+        db.session.execute(db.text("ALTER TABLE muebles ADD COLUMN IF NOT EXISTS imagen VARCHAR(255);"))
+        
         db.session.commit()
     except Exception as e:
         db.session.rollback()

@@ -73,18 +73,13 @@ class Venta(db.Model):
     numero_factura = db.Column(db.String(20), unique=True, nullable=False)
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relación explícita con el vendedor
+    # Relación con el vendedor
     vendedor_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     vendedor = db.relationship('Usuario', foreign_keys=[vendedor_id], backref='ventas')
     
-    # Relación explícita con el mueble usando primaryjoin para evitar errores
+    # Relación limpia y directa con la tabla en plural 'muebles'
     mueble_id = db.Column(db.Integer, db.ForeignKey('muebles.id'), nullable=False)
-    mueble = db.relationship(
-        'Mueble', 
-        foreign_keys=[mueble_id], 
-        primaryjoin='Venta.mueble_id == Mueble.id', 
-        backref='ventas'
-    )
+    mueble = db.relationship('Mueble', backref='ventas')
     
     cantidad = db.Column(db.Integer, nullable=False)
     precio_unitario = db.Column(db.Float, nullable=False)
@@ -97,7 +92,6 @@ class Venta(db.Model):
     localidad_bogota = db.Column(db.String(50), nullable=True)
     cliente_piso = db.Column(db.String(50), nullable=True)
     comentario_venta = db.Column(db.Text, nullable=True)
-
 
 # --- 3. CREACIÓN DE TABLAS Y USUARIOS GLOBAL (Para Render y Local) ---
 with app.app_context():

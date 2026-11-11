@@ -98,6 +98,11 @@ class Venta(db.Model):
     cliente_piso = db.Column(db.String(50), nullable=True)
     comentario_venta = db.Column(db.Text, nullable=True)
 
+    # Nuevas adiciones para el sistema avanzado
+    cliente_id = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=True)
+    cliente_relacionado = db.relationship('Cliente', back_populates='ventas')
+    metodo_pago = db.Column(db.String(50), default='Efectivo')
+
 # --- 3. CREACIÓN DE TABLAS Y USUARIOS GLOBAL (Para Render y Local) ---
 with app.app_context():
     db.create_all()
@@ -143,6 +148,20 @@ with app.app_context():
         vendedor.set_password('vendedor123')
         
     db.session.commit()
+
+# --- NUEVO MODELO DE CLIENTES ---
+class Cliente(db.Model):
+    __tablename__ = 'clientes'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    telefono = db.Column(db.String(50), unique=True, nullable=False)
+    direccion = db.Column(db.String(200), nullable=True)
+    localidad = db.Column(db.String(50), nullable=True)
+    ventas = db.relationship('Venta', back_populates='cliente_relacionado')
+
+# --- MODIFICACIONES EN EL MODELO VENTA ---
+# Agregar una relación opcional con la tabla Clientes y un campo de método de pago:
+
 
 # --- 4. LISTA DE IMÁGENES PRESELECCIONADAS DE CLOUDINARY ---
 IMAGENES_PRESELECCIONADAS = [
@@ -320,14 +339,7 @@ def ver_factura(venta_id):
     venta = Venta.query.get_or_404(venta_id)
     return render_template('factura.html', venta=venta)
 
-@app.route('/ventas/historial')
-@login_required
-def historial_ventas():
-    if current_user.rol == 'fabrica':
-        ventas = Venta.query.order_by(Venta.fecha.desc()).all()
-    else:
-        ventas = Venta.query.filter_by(vendedor_id=current_user.id).order_by(Venta.fecha.desc()).all()
-    return render_template('historial_ventas.html', ventas=ventas)
+
 
 @app.route('/admin/agregar-vendedor', methods=['GET', 'POST'])
 @login_required
@@ -358,6 +370,48 @@ def agregar_vendedor():
 def ventas_por_vendedor():
     vendedores = Usuario.query.all()
     return render_template('admin_ventas.html', vendedores=vendedores)
+
+# A. Dashboard de Estadísticas y Reportes (Para Fábrica o Admin)
+@app.route('/admin/dashboard')
+@login_required
+def dashboard():
+    if current_user.rol != 'fabrica':
+        flash('Acceso denegado.', 'danger')
+        return redirect(url_for('catalogo'))
+    
+    total_ventas_monto = db.session.query(db.func.sum(Venta.total)).scalar() or 0
+    cantidad_ventas = Venta.query.count()
+    total_muebles = Mueble.query.count()
+    
+    return render_template('dashboard.html', total_ventas_monto=total_ventas_monto, 
+                           cantidad_ventas=cantidad_ventas, total_muebles=total_muebles)
+
+# B. Historial con Filtros por Fechas y Vendedor
+@app.route('/ventas/historial', methods=['GET', 'POST'])
+@login_required
+
+@app.route('/ventas/historial')
+@login_required
+def historial_ventas():
+    fecha_inicio = request.args.get('fecha_inicio')
+    fecha_fin = request.args.get('fecha_fin')
+    
+    query = Venta.query
+    if current_user.rol != 'fabrica':
+        query = query.filter_by(vendedor_id=current_user.id)
+        
+    if fecha_inicio and fecha_fin:
+        query = query.filter(Venta.fecha.between(fecha_inicio, fecha_fin))
+        
+    ventas = query.order_by(Venta.fecha.desc()).all()
+    return render_template('historial_ventas.html', ventas=ventas)
+
+# C. Módulo de Clientes Registrados
+@app.route('/clientes')
+@login_required
+def lista_clientes():
+    clientes = Cliente.query.all()
+    return render_template('clientes.html', clientes=clientes)
 
 # --- 6. BLOQUE LOCAL ABSOLUTO (Solo para ejecutar en tu PC) ---
 if __name__ == '__main__':

@@ -66,20 +66,20 @@ class Mueble(db.Model):
     stock = db.Column(db.Integer, default=0)
     imagen = db.Column(db.String(255), nullable=True)
     ubicacion = db.Column(db.String(50), default='Fábrica')
-
+    
 class Venta(db.Model):
     __tablename__ = 'ventas'
     id = db.Column(db.Integer, primary_key=True)
     numero_factura = db.Column(db.String(20), unique=True, nullable=False)
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relación con el vendedor
+    # Relación explícita con el vendedor
     vendedor_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
-    vendedor = db.relationship('Usuario', backref='ventas')
+    vendedor = db.relationship('Usuario', foreign_keys=[vendedor_id], backref='ventas')
     
-    # Relación con el mueble corregida explícitamente
+    # Relación explícita con el mueble (apuntando correctamente a 'muebles.id')
     mueble_id = db.Column(db.Integer, db.ForeignKey('muebles.id'), nullable=False)
-    mueble = db.relationship('Mueble', backref=db.backref('ventas', cascade='all, delete-orphan'))
+    mueble = db.relationship('Mueble', foreign_keys=[mueble_id], backref='ventas')
     
     cantidad = db.Column(db.Integer, nullable=False)
     precio_unitario = db.Column(db.Float, nullable=False)
@@ -92,7 +92,6 @@ class Venta(db.Model):
     localidad_bogota = db.Column(db.String(50), nullable=True)
     cliente_piso = db.Column(db.String(50), nullable=True)
     comentario_venta = db.Column(db.Text, nullable=True)
-
 
 
 # --- 3. CREACIÓN DE TABLAS Y USUARIOS GLOBAL (Para Render y Local) ---

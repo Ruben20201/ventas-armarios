@@ -66,7 +66,7 @@ class Mueble(db.Model):
     stock = db.Column(db.Integer, default=0)
     imagen = db.Column(db.String(255), nullable=True)
     ubicacion = db.Column(db.String(50), default='Fábrica')
-    
+
 class Venta(db.Model):
     __tablename__ = 'ventas'
     id = db.Column(db.Integer, primary_key=True)
@@ -77,9 +77,14 @@ class Venta(db.Model):
     vendedor_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     vendedor = db.relationship('Usuario', foreign_keys=[vendedor_id], backref='ventas')
     
-    # Relación explícita con el mueble (apuntando correctamente a 'muebles.id')
+    # Relación explícita con el mueble usando primaryjoin para evitar errores
     mueble_id = db.Column(db.Integer, db.ForeignKey('muebles.id'), nullable=False)
-    mueble = db.relationship('Mueble', foreign_keys=[mueble_id], backref='ventas')
+    mueble = db.relationship(
+        'Mueble', 
+        foreign_keys=[mueble_id], 
+        primaryjoin='Venta.mueble_id == Mueble.id', 
+        backref='ventas'
+    )
     
     cantidad = db.Column(db.Integer, nullable=False)
     precio_unitario = db.Column(db.Float, nullable=False)

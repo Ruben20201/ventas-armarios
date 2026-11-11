@@ -76,16 +76,16 @@ class Venta(db.Model):
     # Relación con el vendedor
     vendedor_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     vendedor = db.relationship('Usuario', backref='ventas')
-
-    # Relación con el mueble
-    mueble_id = db.Column(db.Integer, db.ForeignKey('mueble.id'), nullable=False)
+    
+    # Relación con el mueble (¡Asegúrate de que diga 'muebles.id' en plural!)
+    mueble_id = db.Column(db.Integer, db.ForeignKey('muebles.id'), nullable=False)
     mueble = db.relationship('Mueble', backref='ventas')
-
+    
     cantidad = db.Column(db.Integer, nullable=False)
     precio_unitario = db.Column(db.Float, nullable=False)
     total = db.Column(db.Float, nullable=False)
     
-    # ¡Asegúrate de tener estas columnas del cliente agregadas aquí!
+    # Columnas de datos del cliente
     cliente_nombre = db.Column(db.String(100), nullable=True)
     cliente_telefono = db.Column(db.String(50), nullable=True)
     cliente_direccion = db.Column(db.String(200), nullable=True)
